@@ -28,6 +28,32 @@
 	#include <unistd.h>
 #endif
 
+int device_callback(
+    hid_hotplug_callback_handle callback_handle,
+    struct hid_device_info* device,
+    hid_hotplug_event event,
+    void* user_data)
+{
+	if (event & HID_API_HOTPLUG_EVENT_DEVICE_ARRIVED)
+		printf("Handle %d: New device is connected: %s.\n", callback_handle, device->path);
+	else
+		printf("Handle %d: Device was disconnected: %s.\n", callback_handle, device->path);
+
+    printf("type: %04hx %04hx\n  serial_number: %ls", device->vendor_id, device->product_id, device->serial_number);
+    printf("\n");
+    printf("  Manufacturer: %ls\n", device->manufacturer_string);
+    printf("  Product:      %ls\n", device->product_string);
+    printf("  Release:      %hx\n", device->release_number);
+    printf("  Interface:    %d\n", device->interface_number);
+    printf("  Usage (page): 0x%hx (0x%hx)\n", device->usage, device->usage_page);
+    printf("\n");
+
+	//if (device->product_id == 0x0ce6)
+	//	return 1;
+
+	return 0;
+}
+
 int main(int argc, char* argv[])
 {
 	(void)argc;
@@ -39,6 +65,7 @@ int main(int argc, char* argv[])
 	wchar_t wstr[MAX_STR];
 	hid_device *handle;
 	int i;
+	hid_hotplug_callback_handle token1, token2;
 
 	struct hid_device_info *devs, *cur_dev;
 
@@ -68,6 +95,18 @@ int main(int argc, char* argv[])
 	}
 	hid_free_enumeration(devs);
 
+	hid_hotplug_register_callback(0, 0, HID_API_HOTPLUG_EVENT_DEVICE_ARRIVED | HID_API_HOTPLUG_EVENT_DEVICE_LEFT, HID_API_HOTPLUG_ENUMERATE, device_callback, NULL, &token1);
+	hid_hotplug_register_callback(0x054c, 0x0ce6, HID_API_HOTPLUG_EVENT_DEVICE_ARRIVED | HID_API_HOTPLUG_EVENT_DEVICE_LEFT, HID_API_HOTPLUG_ENUMERATE, device_callback, NULL, &token2);
+
+	while (1)
+	{
+
+	}
+
+	hid_hotplug_deregister_callback(token2);
+	hid_hotplug_deregister_callback(token1);
+
+	/*
 	// Set up the command buffer.
 	memset(buf,0x00,sizeof(buf));
 	buf[0] = 0x01;
@@ -77,7 +116,7 @@ int main(int argc, char* argv[])
 	// Open the device using the VID, PID,
 	// and optionally the Serial number.
 	////handle = hid_open(0x4d8, 0x3f, L"12345");
-	handle = hid_open(0x4d8, 0x3f, NULL);
+	handle = hid_open(0x54c, 0x0ce6, NULL);
 	if (!handle) {
 		printf("unable to open device\n");
  		return 1;
@@ -189,7 +228,7 @@ int main(int argc, char* argv[])
 		printf("%02hhx ", buf[i]);
 	printf("\n");
 
-	hid_close(handle);
+	hid_close(handle);*/
 
 	/* Free static HIDAPI objects. */
 	hid_exit();
