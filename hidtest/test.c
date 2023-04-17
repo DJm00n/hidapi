@@ -71,6 +71,22 @@ void print_devices(struct hid_device_info *cur_dev) {
 	}
 }
 
+int device_callback(
+    hid_hotplug_callback_handle callback_handle,
+    struct hid_device_info* device,
+    hid_hotplug_event event,
+    void* user_data)
+{
+	if (event & HID_API_HOTPLUG_EVENT_DEVICE_ARRIVED)
+		printf("Handle %d: New device is connected: %s.\n", callback_handle, device->path);
+	else
+		printf("Handle %d: Device was disconnected: %s.\n", callback_handle, device->path);
+
+	print_device(device);
+
+	return 0;
+}
+
 int main(int argc, char* argv[])
 {
 	(void)argc;
@@ -82,6 +98,7 @@ int main(int argc, char* argv[])
 	wchar_t wstr[MAX_STR];
 	hid_device *handle;
 	int i;
+	hid_hotplug_callback_handle token1, token2;
 
 	struct hid_device_info *devs;
 
@@ -105,6 +122,17 @@ int main(int argc, char* argv[])
 	devs = hid_enumerate(0x0, 0x0);
 	print_devices(devs);
 	hid_free_enumeration(devs);
+
+	hid_hotplug_register_callback(0, 0, HID_API_HOTPLUG_EVENT_DEVICE_ARRIVED | HID_API_HOTPLUG_EVENT_DEVICE_LEFT, HID_API_HOTPLUG_ENUMERATE, device_callback, NULL, &token1);
+	hid_hotplug_register_callback(0x054c, 0x0ce6, HID_API_HOTPLUG_EVENT_DEVICE_ARRIVED | HID_API_HOTPLUG_EVENT_DEVICE_LEFT, HID_API_HOTPLUG_ENUMERATE, device_callback, NULL, &token2);
+
+	while (1)
+	{
+
+	}
+
+	hid_hotplug_deregister_callback(token2);
+	hid_hotplug_deregister_callback(token1);
 
 	// Set up the command buffer.
 	memset(buf,0x00,sizeof(buf));
