@@ -803,15 +803,9 @@ DWORD WINAPI interface_notify_callback(HCMNOTIFICATION notify, PVOID context, CM
 	if (!event)
 		return ERROR_SUCCESS;
 
-	char *path;
+	char *path = hid_internal_UTF16toUTF8(event_data->u.DeviceInterface.SymbolicLink);
 	size_t len;
 	struct hid_device_info *dev = NULL;
-
-	len = wcslen(event_data->u.DeviceInterface.SymbolicLink);
-	path = (char*)calloc(len + 1, sizeof(char));
-
-	if (wcstombs(path, event_data->u.DeviceInterface.SymbolicLink, len) == (size_t)-1)
-		goto close;
 
 	if (event == HID_API_HOTPLUG_EVENT_DEVICE_ARRIVED) {
 		/* Open read-only handle to the device */
