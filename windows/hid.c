@@ -699,9 +699,6 @@ struct hid_device_info HID_API_EXPORT * HID_API_CALL hid_enumerate(unsigned shor
 		HANDLE device_handle = INVALID_HANDLE_VALUE;
 		HIDD_ATTRIBUTES attrib;
 
-		/* Normalize the path */
-		for (char* p = device_interface_detail_data->DevicePath; *p; ++p) *p = tolower(*p);
-
 		/* Open read-only handle to the device */
 		device_handle = open_device(device_interface, FALSE);
 
